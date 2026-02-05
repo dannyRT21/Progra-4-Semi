@@ -8,7 +8,7 @@
 
   <style>
     body {
-      background-color: #fe7dd3;
+      background-color: #161515;
       height: 100vh;
     }
 
@@ -42,7 +42,9 @@
     table {
       table-layout: auto;
     }
-    table th, table td {
+
+    table th,
+    table td {
       white-space: nowrap;
       overflow: visible;
       text-overflow: clip;
@@ -54,7 +56,7 @@
       max-height: 400px;
       overflow-y: auto;
       overflow-x: auto;
-      border: 1px solid rgba(0,0,0,.1);
+      border: 1px solid rgba(0, 0, 0, .1);
       border-radius: .5rem;
       background: #fff;
     }
@@ -96,7 +98,9 @@
     }
 
     @media (max-width: 992px) {
-      body { height: auto; }
+      body {
+        height: auto;
+      }
 
       .floating-card,
       .floating-table {
@@ -122,104 +126,132 @@
 </head>
 
 <body>
-  <div class="card floating-card bg-warning" id="draggableCard">
-    <div class="card-header">Registro de Alumnos</div>
-    <div class="card-body overflow-auto" style="max-height: 550px;">
-      <h5 class="card-title">Formulario de Registro Académico</h5>
+  <div id="app">
 
-      <form id="fmrRegistroAlumnos">
-        <div class="mb-3">
-          <label class="form-label">Nombre:</label>
-          <input type="text" class="form-control" id="txtnombreAlumno" placeholder="Ingresa tu nombre">
-        </div>
+    <!-- CARD FORM -->
+    <div class="card floating-card bg-warning" id="draggableCard" :style="{ display: mostrarFormulario ? 'block' : 'none' }">
+      <div class="card-header">Registro de Alumnos</div>
+      <div class="card-body overflow-auto" style="max-height: 550px;">
+        <h5 class="card-title">Formulario de Registro Académico</h5>
 
-        <div class="mb-3">
-          <label class="form-label">Código:</label>
-          <input type="text" class="form-control" id="txtCodigo" placeholder="Ingresa tu código">
-        </div>
+        <form id="fmrRegistroAlumnos" @submit.prevent="registrarAlumno" @reset.prevent="cancelarFormulario">
 
-        <div class="mb-3">
-          <label class="form-label">Departamento:</label>
-          <select class="form-select" id="selectDepartamento">
-            <option value="">Selecciona un departamento</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Municipio:</label>
-          <select class="form-select" id="selectMunicipio">
-            <option value="">Selecciona un municipio</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Fecha de Nacimiento:</label>
-          <input type="date" class="form-control" id="txtFechaNacimiento">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Teléfono:</label>
-          <input type="text" class="form-control" id="txtTelefono" placeholder="Ingresa tu teléfono">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Dirección:</label>
-          <input type="text" class="form-control" id="txtdireccion" placeholder="Ingresa tu dirección">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Sexo:</label><br>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="sexo" id="sexoF" value="Femenino">
-            <label class="form-check-label" for="sexoF">Femenino</label>
+          <div class="mb-3">
+            <label class="form-label">Nombre:</label>
+            <input type="text" class="form-control" id="txtnombreAlumno" placeholder="Ingresa tu nombre" v-model="form.nombre">
           </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="sexo" id="sexoM" value="Masculino">
-            <label class="form-check-label" for="sexoM">Masculino</label>
+
+          <div class="mb-3">
+            <label class="form-label">Código:</label>
+            <input type="text" class="form-control" id="txtCodigo" placeholder="Ingresa tu código" v-model="form.codigo" :readonly="editingId !== null" :class="{ 'bg-light': editingId !== null }">
           </div>
-        </div>
 
-        <div class="d-flex justify-content-between">
-          <button type="submit" class="btn btn-primary">Registrar</button>
-          <button type="reset" class="btn btn-secondary">Cancelar</button>
-        </div>
-      </form>
+          <div class="mb-3">
+            <label class="form-label">Departamento:</label>
+            <select class="form-select" id="selectDepartamento" v-model="form.departamento" @change="onDepartamentoChange">
+              <option value="">Selecciona un departamento</option>
+              <option v-for="d in departamentos" :key="d.value ?? d" :value="d.value ?? d">
+                {{ d.label ?? d }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Municipio:</label>
+            <select class="form-select" id="selectMunicipio" v-model="form.municipio">
+              <option value="">Selecciona un municipio</option>
+              <option v-for="m in municipios" :key="m.value ?? m" :value="m.value ?? m">
+                {{ m.label ?? m }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Fecha de Nacimiento:</label>
+            <input type="date" class="form-control" id="txtFechaNacimiento" v-model="form.fechaNacimiento">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Teléfono:</label>
+            <input type="text" class="form-control" id="txtTelefono" placeholder="Ingresa tu teléfono" v-model="form.telefono">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Dirección:</label>
+            <input type="text" class="form-control" id="txtdireccion" placeholder="Ingresa tu dirección" v-model="form.direccion">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Sexo:</label><br>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="sexo" id="sexoF" value="Femenino" v-model="form.sexo">
+              <label class="form-check-label" for="sexoF">Femenino</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="sexo" id="sexoM" value="Masculino" v-model="form.sexo">
+              <label class="form-check-label" for="sexoM">Masculino</label>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Registrar</button>
+            <button type="reset" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-  
-  <div class="floating-table" id="draggableTable">
-  <div class="d-flex align-items-center justify-content-between mb-2">
-    <h5 class="mb-0 drag-handle" id="tableHandle">Lista de Alumnos</h5>
 
-    <div class="input-group w-50">
-      <input type="text" class="form-control" id="txtBarradeBusqueda" placeholder="Buscar por código y departamento">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <!-- TABLA LISTA DE ALUMNOS -->
+    <div class="floating-table" id="draggableTable">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h5 class="mb-0 drag-handle" id="tableHandle">Lista de Alumnos</h5>
+        <div class="input-group w-50">
+          <input type="text" class="form-control" id="txtBarradeBusqueda" placeholder="Buscar por código y departamento" v-model="buscar" @input="filtrarAlumnos">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+        </div>
+      </div>
+
+      <div class="table-scroll-wrap" id="tableScrollWrap">
+        <table id="tblAlumnos" class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Código</th>
+              <th>Departamento</th>
+              <th>Municipio</th>
+              <th>Fecha</th>
+              <th>Sexo</th>
+              <th>Teléfono</th>
+              <th>Dirección</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="a in alumnosFiltrados" :key="a.id" @click="seleccionarAlumno(a)">
+              <td>{{ a.nombre }}</td>
+              <td>{{ a.codigo }}</td>
+              <td>{{ a.departamento }}</td>
+              <td>{{ a.municipio }}</td>
+              <td>{{ a.fechaNacimiento }}</td>
+              <td>{{ a.sexo }}</td>
+              <td>{{ a.telefono }}</td>
+              <td>{{ a.direccion }}</td>
+              <td>
+                <button type="button" class="btn btn-danger btn-del" @click="eliminarAlumno(a.id, $event)">DEL</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-end">
+        <button id="btnMostrarFormulario" class="btn btn-success mt-3" @click="mostrarFormulario = true">
+          Registrar
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div class="table-scroll-wrap" id="tableScrollWrap">
-    <table id="tblAlumnos" class="table table-striped table-hover">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Código</th>
-          <th>Departamento</th>
-          <th>Municipio</th>
-          <th>Fecha</th>
-          <th>Sexo</th>
-          <th>Teléfono</th>
-          <th>Dirección</th>
-          <th>Acción</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
   </div>
-
-  <div class="text-end">
-    <button id="btnMostrarFormulario" class="btn btn-success mt-3">Registrar</button>
-  </div>
-</div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -233,9 +265,6 @@
       });
 
       const wrap = document.getElementById("tableScrollWrap");
-      const btnLeft = document.getElementById("btnScrollLeft");
-      const btnRight = document.getElementById("btnScrollRight");
-
       const SCROLL_STEP = 260;
 
       btnLeft.addEventListener("click", () => {
@@ -275,6 +304,7 @@
     }
   </script>
 
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="departYmuncip.js"></script>
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

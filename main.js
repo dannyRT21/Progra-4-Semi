@@ -1,256 +1,234 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("fmrRegistroAlumnos");
-    const tabla = document.querySelector("#tblAlumnos tbody");
-    const inputBusqueda = document.getElementById("txtBarradeBusqueda");
-    inputBusqueda.addEventListener("input", () => {
-    const texto = inputBusqueda.value.trim().toUpperCase();
-    const resultados = buscarAlumnos(texto);
-    mostrarAlumnos(resultados);
-});
+const { createApp } = Vue;
 
-    let editingId = null;
+createApp({
+    data() {
+        return {
+            cargandoEdicion: false,
+            mostrarFormulario: false,
+            editingId: null,
+            buscar: "",
+            departamentos: [],
+            municipios: [],
+            alumnos: [],
+            form: {
+                nombre: "",
+                codigo: "",
+                departamento: "",
+                municipio: "",
+                fechaNacimiento: "",
+                telefono: "",
+                direccion: "",
+                sexo: ""
+            }
+        };
+    },
 
-    const inputCodigo = document.getElementById("txtCodigo");
-    const inputTelefono = document.getElementById("txtTelefono");
+    computed: {
+        alumnosFiltrados() {
+            const texto = (this.buscar || "").trim().toUpperCase();
+            if (!texto) return this.alumnos;
+            const palabras = texto.split(/\s+/).filter(Boolean);
+            return this.alumnos.filter((a) => {
+                if (!a?.codigo || !a?.departamento || !a?.nombre) return false;
+                const contenido = `${a.codigo} ${a.departamento} ${a.nombre}`.toUpperCase();
+                return palabras.every(p => contenido.includes(p));
+            });
+        }
+    },
+                        
+    watch: {
+        "form.codigo"(val) {
+  if (this.editingId !== null) return; 
+  const v = (val ?? "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  const letras = v.replace(/[^A-Z]/g, "").slice(0, 4);
+  const numeros = v.replace(/[^0-9]/g, "").slice(0, 6);
+  const nuevo = letras + numeros;
+  if (nuevo !== val) this.form.codigo = nuevo;
+},
 
-    inputCodigo.addEventListener("input", () => {
-        let v = inputCodigo.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        const letras = v.replace(/[^A-Z]/g, "").slice(0, 4);
-        const numeros = v.replace(/[^0-9]/g, "").slice(0, 6);
-        inputCodigo.value = letras + numeros;
-    });
 
-    inputCodigo.addEventListener("paste", (e) => {
-        e.preventDefault();
-        const text = (e.clipboardData || window.clipboardData).getData("text");
-        let v = text.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        const letras = v.replace(/[^A-Z]/g, "").slice(0, 4);
-        const numeros = v.replace(/[^0-9]/g, "").slice(0, 6);
-        inputCodigo.value = letras + numeros;
-    });
+        "form.telefono"(val) {
+            const digits = (val ?? "").replace(/\D/g, "").slice(0, 8);
+            const nuevo = digits.length <= 4 ? digits : digits.slice(0, 4) + "-" + digits.slice(4);
+            if (nuevo !== val) this.form.telefono = nuevo;
+        },
 
-    inputTelefono.addEventListener("input", () => {
-        let digits = inputTelefono.value.replace(/\D/g, "").slice(0, 8);
-        inputTelefono.value = digits.length <= 4 ? digits : digits.slice(0, 4) + "-" + digits.slice(4);
-    });
+        "form.departamento"(depto) {
+            this.cargarMunicipios(depto);
+            if (!this.cargandoEdicion) {
+                this.form.municipio = "";
+            }
+        }
+    },
 
-    inputTelefono.addEventListener("paste", (e) => {
-        e.preventDefault();
-        const text = (e.clipboardData || window.clipboardData).getData("text");
-        let digits = text.replace(/\D/g, "").slice(0, 8);
-        inputTelefono.value = digits.length <= 4 ? digits : digits.slice(0, 4) + "-" + digits.slice(4);
-    });
+    methods: {
+        filtrarAlumnos() {},
 
-    form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        guardarAlumno();
-    });
+        onDepartamentoChange() {},
 
-    tabla.addEventListener("click", (e) => {
-        const btn = e.target.closest(".btn-del");
-        if (btn) {
-            const id = btn.dataset.id;
+        cargarMunicipios(depto) {
+            if (typeof departamentosYMunicipios !== "object" || !departamentosYMunicipios) {
+                this.municipios = [];
+                return;
+            }
+            const arr = departamentosYMunicipios[depto];
+            this.municipios = Array.isArray(arr) ? arr : [];
+        },
+
+        cargarAlumnos() {
+            const alumnos = [];
+            for (const key of Object.keys(localStorage)) {
+                try {
+                    const obj = JSON.parse(localStorage.getItem(key));
+                    if (obj?.codigo && obj?.nombre) alumnos.push(obj);
+                } catch {
+                }
+            }
+            this.alumnos = alumnos;
+        },
+
+        seleccionarAlumno(a) {
+            this.editingId = a.id;
+            this.cargandoEdicion = true;
+            this.form = {
+                nombre: a.nombre ?? "",
+                codigo: a.codigo ?? "",
+                departamento: a.departamento ?? "",
+                municipio: "",
+                fechaNacimiento: a.fechaNacimiento ?? "",
+                telefono: a.telefono ?? "",
+                direccion: a.direccion ?? "",
+                sexo: a.sexo ?? ""
+            };
+            this.cargarMunicipios(this.form.departamento);
+            this.form.municipio = a.municipio ?? "";
+            this.mostrarFormulario = true;
+            this.$nextTick(() => {
+                this.cargandoEdicion = false;
+            });
+        },
+
+        eliminarAlumno(id, e) {
+            if (e) e.stopPropagation();
             if (!confirm("¿Estás seguro de que deseas eliminar este alumno?")) return;
             localStorage.removeItem(id);
-            mostrarAlumnos();
-            if (editingId === id) {
-                editingId = null;
-                limpiarFormulario();
+            this.cargarAlumnos();
+            if (this.editingId === id) {
+                this.cancelarFormulario();
             }
-            return;
-        }
+        },
+registrarAlumno() {
+  const esNuevo = this.editingId === null;
 
-        const row = e.target.closest("tr");
-        if (row && row.dataset.alumno) {
-            const alumno = JSON.parse(row.dataset.alumno);
-            cargarAlumnoEnFormulario(alumno);
-            editingId = alumno.id;
-            const card = document.getElementById("draggableCard");
-            if (card) card.style.display = "block";
-        }
-    });
+ 
+  const codigo = esNuevo
+    ? (this.form.codigo || "").trim().toUpperCase()
+    : (this.form.codigo || "").trim().toUpperCase(); // lo mantienes por consistencia, pero no lo re-validas igual
 
-    document.getElementById("selectDepartamento").addEventListener("change", function () {
-        const depto = this.value;
-        const selectMunicipio = document.getElementById("selectMunicipio");
-        selectMunicipio.innerHTML = '<option value="">Selecciona un municipio</option>';
+  const nombre = (this.form.nombre || "").trim();
+  const telefono = (this.form.telefono || "").trim();
+  const direccion = (this.form.direccion || "").trim();
+  const departamento = this.form.departamento || "";
+  const municipio = this.form.municipio || "";
+  const fechaNacimiento = this.form.fechaNacimiento || "";
+  const sexo = this.form.sexo || "";
 
-        if (departamentosYMunicipios[depto]) {
-            departamentosYMunicipios[depto].forEach(municipio => {
-                const option = document.createElement("option");
-                option.value = municipio;
-                option.textContent = municipio;
-                selectMunicipio.appendChild(option);
-            });
-        }
-    });
+  if (!codigo || !nombre || !departamento || !municipio || !fechaNacimiento || !sexo || !telefono || !direccion) {
+    alert("Por favor, completa todos los campos.");
+    return;
+  }
 
-    form.addEventListener("reset", () => {
-        editingId = null;
-    });
-
-    // 🔍 BÚSQUEDA EN TIEMPO REAL
-    inputBusqueda.addEventListener("input", () => {
-        const texto = inputBusqueda.value.trim().toUpperCase();
-        const [codigo, ...resto] = texto.split(" ");
-        const departamento = resto.join(" ").trim();
-        const resultados = buscarPorCodigoYDepartamento(codigo, departamento);
-        mostrarAlumnos(resultados);
-    });
-
-    mostrarAlumnos();
-
-    // === FUNCIONES ===
-
-    function mostrarAlumnos(lista = null) {
-        const tabla = document.querySelector("#tblAlumnos tbody");
-        tabla.innerHTML = "";
-
-        const alumnos = lista || Object.keys(localStorage)
-            .map(key => JSON.parse(localStorage.getItem(key)))
-            .filter(alumno => alumno?.codigo && alumno?.nombre);
-
-        alumnos.forEach(alumno => {
-            const fila = document.createElement("tr");
-            fila.dataset.alumno = JSON.stringify(alumno);
-            fila.innerHTML = `
-                <td>${alumno.nombre}</td>
-                <td>${alumno.codigo}</td>
-                <td>${alumno.departamento}</td>
-                <td>${alumno.municipio}</td>
-                <td>${alumno.fechaNacimiento}</td>
-                <td>${alumno.sexo}</td>
-                <td>${alumno.telefono}</td>
-                <td>${alumno.direccion}</td>
-                <td><button class="btn btn-danger btn-sm btn-del" data-id="${alumno.id}">DEL</button></td>
-            `;
-            tabla.appendChild(fila);
-        });
+ 
+  if (esNuevo) {
+    if (!/^[A-Z]{4}[0-9]{6}$/.test(codigo)) {
+      alert("Código inválido. Debe ser 4 letras y 6 números (ej: USSS037323).");
+      return;
     }
 
-    function guardarAlumno() {
-        const codigo = document.getElementById("txtCodigo").value.trim().toUpperCase();
-        const nombre = document.getElementById("txtnombreAlumno").value.trim();
-        const telefono = document.getElementById("txtTelefono").value.trim();
-        const direccion = document.getElementById("txtdireccion").value.trim();
-        const departamento = document.getElementById("selectDepartamento").value;
-        const municipio = document.getElementById("selectMunicipio").value;
-        const fechaNacimiento = document.getElementById("txtFechaNacimiento").value;
-        const sexo = document.querySelector("input[name='sexo']:checked")?.value || "";
-
-        if (!codigo || !nombre || !departamento || !municipio || !fechaNacimiento || !sexo || !telefono || !direccion) {
-            alert("Por favor, completa todos los campos.");
-            return;
-        }
-
-        if (!/^[A-Z]{4}[0-9]{6}$/.test(codigo)) {
-            alert("Código inválido. Debe ser 4 letras y 6 números (ej: USSS037323).");
-            return;
-        }
-
-        if (!/^[0-9]{4}-[0-9]{4}$/.test(telefono)) {
-            alert("Teléfono inválido. Debe ser formato 1234-5678.");
-            return;
-        }
-
-        const alumnoExistente = buscarAlumnoPorCodigo(codigo, editingId);
-        if (alumnoExistente) {
-            alert(`El código ya existe: ${alumnoExistente.nombre}`);
-            return;
-        }
-
-        const id = editingId ?? generarId();
-
-        const alumno = {
-            id,
-            codigo,
-            nombre,
-            telefono,
-            direccion,
-            departamento,
-            municipio,
-            fechaNacimiento,
-            sexo
-        };
-
-        localStorage.setItem(id, JSON.stringify(alumno));
-        mostrarAlumnos();
-        editingId = null;
-        limpiarFormulario();
+    const existente = this.buscarAlumnoPorCodigo(codigo, null);
+    if (existente) {
+      alert(`El código ya existe: ${existente.nombre}`);
+      return;
     }
-
-    function buscarAlumnoPorCodigo(codigo, ignoreId = null) {
-        const code = codigo.trim().toUpperCase();
-
-        for (const key of Object.keys(localStorage)) {
-            const alumno = JSON.parse(localStorage.getItem(key));
-            if (!alumno?.codigo) continue;
-
-            const sameCode = alumno.codigo.trim().toUpperCase() === code;
-            const sameId = ignoreId && alumno.id === ignoreId;
-
-            if (sameCode && !sameId) {
-                return alumno;
-            }
-        }
-        return null;
-    }
-
-    function cargarAlumnoEnFormulario(alumno) {
-        document.getElementById("txtCodigo").value = alumno.codigo;
-        document.getElementById("txtnombreAlumno").value = alumno.nombre;
-        document.getElementById("txtTelefono").value = alumno.telefono;
-        document.getElementById("txtdireccion").value = alumno.direccion;
-        document.getElementById("selectDepartamento").value = alumno.departamento;
-
-        const selectMunicipio = document.getElementById("selectMunicipio");
-        selectMunicipio.innerHTML = '<option value="">Selecciona un municipio</option>';
-
-        if (departamentosYMunicipios[alumno.departamento]) {
-            departamentosYMunicipios[alumno.departamento].forEach(muni => {
-                const option = document.createElement("option");
-                option.value = muni;
-                option.textContent = muni;
-                selectMunicipio.appendChild(option);
-            });
-        }
-
-        selectMunicipio.value = alumno.municipio;
-        document.getElementById("txtFechaNacimiento").value = alumno.fechaNacimiento;
-
-        if (alumno.sexo === "Femenino") {
-            document.getElementById("sexoF").checked = true;
-        } else if (alumno.sexo === "Masculino") {
-            document.getElementById("sexoM").checked = true;
-        }
-    }
-
-    function limpiarFormulario() {
-        document.getElementById("fmrRegistroAlumnos").reset();
-    }
-
-    function generarId() {
-        return new Date().getTime().toString();
-    }
-    
-function buscarAlumnos(texto) {
-  const palabras = texto.trim().toUpperCase().split(" ");
-  const resultados = [];
-
-  for (const key of Object.keys(localStorage)) {
-    const alumno = JSON.parse(localStorage.getItem(key));
-    if (!alumno?.codigo || !alumno?.departamento || !alumno?.nombre) continue;
-
-    const contenido = (alumno.codigo + " " + alumno.departamento + " " + alumno.nombre).toUpperCase();
-
-    const coincideTodo = palabras.every(palabra => contenido.includes(palabra));
-    if (coincideTodo) {
-      resultados.push(alumno);
+  } else {
+    // ✅ En edición: opcional validar formato sin bloquear (o sí bloquear, tú decides)
+    if (!/^[A-Z]{4}[0-9]{6}$/.test(codigo)) {
+      alert("El código del registro está inválido. (No se puede editar el código).");
+      return;
     }
   }
 
-  return resultados;
-}
+  if (!/^[0-9]{4}-[0-9]{4}$/.test(telefono)) {
+    alert("Teléfono inválido. Debe ser formato 1234-5678.");
+    return;
+  }
 
+  const id = this.editingId ?? this.generarId();
 
-});
+  const alumno = {
+    id,
+    codigo,
+    nombre,
+    telefono,
+    direccion,
+    departamento,
+    municipio,
+    fechaNacimiento,
+    sexo
+  };
+
+  localStorage.setItem(id, JSON.stringify(alumno));
+  this.cargarAlumnos();
+  this.cancelarFormulario();
+},
+
+        buscarAlumnoPorCodigo(codigo, ignoreId = null) {
+            const code = (codigo ?? "").trim().toUpperCase();
+            for (const key of Object.keys(localStorage)) {
+                let alumno;
+                try {
+                    alumno = JSON.parse(localStorage.getItem(key));
+                } catch {
+                    continue;
+                }
+                if (!alumno?.codigo) continue;
+                const sameCode = alumno.codigo.trim().toUpperCase() === code;
+                const sameId = ignoreId && alumno.id === ignoreId;
+                if (sameCode && !sameId) return alumno;
+            }
+            return null;
+        },
+
+        generarId() {
+            return new Date().getTime().toString();
+        },
+
+        cancelarFormulario() {
+            this.editingId = null;
+            this.form = {
+                nombre: "",
+                codigo: "",
+                departamento: "",
+                municipio: "",
+                fechaNacimiento: "",
+                telefono: "",
+                direccion: "",
+                sexo: ""
+            };
+            this.mostrarFormulario = false;
+        },
+
+        initDepartamentos() {
+            if (typeof departamentosYMunicipios === "object" && departamentosYMunicipios) {
+                this.departamentos = Object.keys(departamentosYMunicipios);
+            } else {
+                this.departamentos = [];
+            }
+        }
+    },
+
+    mounted() {
+        this.initDepartamentos();
+        this.cargarAlumnos();
+    }
+}).mount("#app");
