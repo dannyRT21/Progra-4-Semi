@@ -171,6 +171,9 @@ export const RegistroView = {
         sexo
       };
 
+      const sha256 = CryptoJS.SHA256;
+      alumno.hash = sha256(JSON.stringify(alumno)).toString();
+
       // put = inserta o actualiza por PK
       await db.alumnos.put(alumno);
 
@@ -198,9 +201,6 @@ export const RegistroView = {
     }
   },
 
-  AbrirVentanaBuscar() {
-    this.mostrarFormulario = false;
-  },
 
   async mounted() {
     this.initDepartamentos();

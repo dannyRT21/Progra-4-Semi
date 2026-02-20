@@ -9,12 +9,19 @@ export const db = new Dexie("db_academica");
 
 db.version(1).stores({
   // Mantengo tablas del inge + tu tabla de alumnos con campos extra
-  alumnos: "id,codigo,nombre,departamento,municipio,fechaNacimiento,sexo,telefono,direccion",
-  materias: "idMateria,codigo,nombre,uv",
-  docentes: "idDocente,codigo,nombre,direccion,email,telefono,escalafon"
+  alumnos: "id,codigo,nombre,departamento,municipio,fechaNacimiento,sexo,telefono,direccion,hash",
+  materias: "idMateria,codigo,nombre,uv,idDocente,hash",
+  docentes: "idDocente,codigo,nombre,direccion,email,telefono,escalafon,hash",
+
+  matricula: "++idMatricula,idAlumno,fechaMatricula,ciclo,estado",
+  inscripcion: "++idInscripcion,idMatricula,idMateria,fechaInscripcion",
+  
+  // Tabla de acceso
+  usuarios: "++idUsuario,usuario,clave,nombre"
+  
 });
 
-// Opcional: atajo para abrir (Dexie abre solo cuando se usa, pero esto ayuda a detectar errores temprano)
+
 export async function initDb() {
   await db.open();
   return db;
