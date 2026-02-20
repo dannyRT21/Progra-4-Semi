@@ -1,0 +1,115 @@
+body {
+      background-color: #161515;
+      height: 100vh;
+    }
+
+    .floating-card {
+      max-width: 46rem;
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      cursor: move;
+      border-radius: 0.5rem;
+      z-index: 1000;
+    }
+
+    .card-header {
+      cursor: move;
+    }
+
+    .floating-table {
+      position: absolute;
+      top: 100px;
+      left: 600px;
+      background-color: white;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-radius: 0.5rem;
+      cursor: move;
+      max-width: 900px;
+    }
+
+    table {
+      table-layout: auto;
+    }
+
+    table th,
+    table td {
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+      max-width: none;
+      vertical-align: middle;
+    }
+
+    .table-scroll-wrap {
+      max-height: 400px;
+      overflow-y: auto;
+      overflow-x: auto;
+      border: 1px solid rgba(0, 0, 0, .1);
+      border-radius: .5rem;
+      background: #fff;
+    }
+
+    #tblAlumnos {
+      min-width: 1100px;
+      margin-bottom: 0;
+    }
+
+    .scroll-controls {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: .5rem;
+      user-select: none;
+    }
+
+    .scroll-btn {
+      width: 40px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: .5rem;
+    }
+
+    .btn-del {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    #draggableCard {
+      display: none;
+    }
+
+    .drag-handle {
+      cursor: move;
+    }
+
+    @media (max-width: 992px) {
+      body {
+        height: auto;
+      }
+
+      .floating-card,
+      .floating-table {
+        position: static;
+        left: auto;
+        top: auto;
+        max-width: 100%;
+        width: calc(100% - 2rem);
+        margin: 1rem auto;
+        cursor: default;
+      }
+
+      .card-header,
+      .drag-handle {
+        cursor: default;
+      }
+
+      #tblAlumnos {
+        min-width: 900px;
+      }
+    }

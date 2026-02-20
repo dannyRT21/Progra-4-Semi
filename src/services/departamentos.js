@@ -1,5 +1,4 @@
-
-const departamentosYMunicipios = {
+export const departamentosYMunicipios = {
     "Ahuachapán": [
         "Ahuachapán Norte",
         "Ahuachapán Centro",
@@ -73,13 +72,12 @@ const departamentosYMunicipios = {
         "Morazán Sur"
     ]
 };
-window.addEventListener('DOMContentLoaded', () => {
-    const selectDepartamento = document.getElementById('selectDepartamento');
-    Object.keys(departamentosYMunicipios).forEach(departamento => {
-        const option = document.createElement('option');
-        option.value = departamento;
-        option.textContent = departamento;
-        selectDepartamento.appendChild(option);
-    });
-});
 
+export function getDepartamentos() {
+  return Object.keys(departamentosYMunicipios);
+}
+
+export function getMunicipios(depto) {
+  const arr = departamentosYMunicipios[depto];
+  return Array.isArray(arr) ? arr : [];
+}
