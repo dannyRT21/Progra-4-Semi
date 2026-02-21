@@ -13,11 +13,11 @@ db.version(1).stores({
   materias: "idMateria,codigo,nombre,uv,idDocente,hash",
   docentes: "idDocente,codigo,nombre,direccion,email,telefono,escalafon,hash",
 
-  matricula: "++idMatricula,idAlumno,fechaMatricula,ciclo,estado",
+  matricula: "++idMatricula,id,fechaMatricula,ciclo,estado,carrera,ingreso,hash",
   inscripcion: "++idInscripcion,idMatricula,idMateria,fechaInscripcion",
   
   // Tabla de acceso
-  usuarios: "++idUsuario,usuario,clave,nombre"
+  usuarios: "++idUsuario,usuario,clave,nombre,hash"
   
 });
 

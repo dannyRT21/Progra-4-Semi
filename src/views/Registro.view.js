@@ -94,6 +94,23 @@ export const RegistroView = {
 
     async eliminarAlumno(id, e) {
       if (e) e.stopPropagation();
+
+      // Validar si el alumno tiene matrículas activas
+      const matriculasActivas = await db.matricula
+        .where("id")
+        .equals(id)
+        .filter(m => m.estado === "Activo")
+        .count();
+
+      if (matriculasActivas > 0) {
+        if (window.alertify) {
+          alertify.error("No se puede eliminar el alumno porque tiene una matrícula en estado Activo.");
+        } else {
+          alert("No se puede eliminar el alumno porque tiene una matrícula en estado Activo.");
+        }
+        return;
+      }
+
       if (!confirm("¿Estás seguro de que deseas eliminar este alumno?")) return;
 
       await db.alumnos.delete(id);
