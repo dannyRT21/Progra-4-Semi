@@ -2,6 +2,7 @@ import { RegistroView } from "./views/Registro.view.js";
 import { DocentesView } from "./views/RegistroDocentes.view.js";
 import { MateriasView } from "./views/RegistroMaterias.view.js";
 import { RegistroMatriculasView } from "./views/RegistroMatriculas.view.js";
+import { InscripcionesView } from "./views/Inscripciones.view.js";
 const { createApp } = Vue;
 
 createApp({
@@ -12,7 +13,7 @@ createApp({
       
     };
   },
-  components: { RegistroView, DocentesView, MateriasView, RegistroMatriculasView },
+  components: { RegistroView, DocentesView, MateriasView, RegistroMatriculasView, InscripcionesView },
   methods: {
     abrirVentana(view) {
       this.currentView = view;
@@ -29,6 +30,7 @@ createApp({
               <a class="nav-link" href="#" @click.prevent="abrirVentana('registro')">Alumnos</a>
               <a class="nav-link" href="#" @click.prevent="abrirVentana('materias')">Materias</a>
               <a class="nav-link" href="#" @click.prevent="abrirVentana('matriculas')">Matrículas</a>
+              <a class="nav-link" href="#" @click.prevent="abrirVentana('inscripciones')">Inscripciones</a>
             </div>
           </div>
         </div>
@@ -39,6 +41,7 @@ createApp({
         <DocentesView v-if="currentView === 'docentes'" />
         <MateriasView v-if="currentView === 'materias'" />
         <RegistroMatriculasView v-if="currentView === 'matriculas'" />
+        <InscripcionesView v-if="currentView === 'inscripciones'" />
 
       </div>
     </div>
