@@ -1,25 +1,29 @@
-
 const Dexie = window.Dexie;
 
 if (!Dexie) {
   throw new Error("Dexie no está cargado. Revisa que el script de Dexie esté antes de src/main.js en index.html");
 }
 
-export const db = new Dexie("db_academica");
+export class Database extends Dexie {
+  constructor() {
+    super("db_USSS025824");
 
-db.version(1).stores({
-  alumnos: "id,codigo,nombre,departamento,municipio,fechaNacimiento,sexo,telefono,direccion,hash",
-  materias: "idMateria,codigo,nombre,uv,idDocente,hash",
-  docentes: "idDocente,codigo,nombre,direccion,email,telefono,escalafon,hash",
+    this.version(1).stores({
+      clientes: "++idCliente, codigo, nombre, direccion, zona",
+      lecturas: "++idLectura, cliente, fecha, lectura_anterior, lectura_actual, pago",
+    });
 
-  matricula: "++idMatricula,id,fechaMatricula,ciclo,estado,carrera,ingreso,hash",
-  inscripcion: "++idInscripcion,idMatricula,idMateria,fechaInscripcion",
-  
-  // Tabla de acceso
-  usuarios: "++idUsuario,usuario,clave,nombre,hash"
-  
-});
+    this.version(2).stores({
+      clientes: "++idCliente, codigo, nombre, direccion, zona",
+      lecturas: "++idLectura, codigoCliente, cliente, fecha, lectura_anterior, lectura_actual, pago",
+    });
 
+    this.clientes = this.table("clientes");
+    this.lecturas = this.table("lecturas");
+  }
+}
+
+export const db = new Database();
 
 export async function initDb() {
   await db.open();
