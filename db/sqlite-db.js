@@ -94,16 +94,18 @@ async function upsertMateria(sqliteDb, materia) {
 
 async function upsertDocente(sqliteDb, docente) {
     await sqliteDb.exec(
-        `INSERT INTO docentes (idDocente, codigo, nombre, direccion, email, telefono, escalafon)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO docentes (idDocente, codigo, nombre, dui, direccion, email, telefono, escalafon, hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(idDocente) DO UPDATE SET
             codigo = excluded.codigo,
             nombre = excluded.nombre,
+            dui = excluded.dui,
             direccion = excluded.direccion,
             email = excluded.email,
             telefono = excluded.telefono,
-            escalafon = excluded.escalafon;`,
-        [docente.idDocente, docente.codigo, docente.nombre, docente.direccion, docente.email, docente.telefono, docente.escalafon]
+            escalafon = excluded.escalafon,
+            hash = excluded.hash;`,
+        [docente.idDocente, docente.codigo, docente.nombre, docente.dui, docente.direccion, docente.email, docente.telefono, docente.escalafon, docente.hash ?? null]
     );
 }
 
@@ -139,10 +141,12 @@ async function createSchema(sqliteDb) {
             idDocente TEXT PRIMARY KEY,
             codigo TEXT NOT NULL,
             nombre TEXT NOT NULL,
+            dui TEXT NOT NULL,
             direccion TEXT NOT NULL,
             email TEXT NOT NULL,
             telefono TEXT NOT NULL,
-            escalafon TEXT NOT NULL
+            escalafon TEXT NOT NULL,
+            hash TEXT
         );
 
         CREATE UNIQUE INDEX IF NOT EXISTS idx_docentes_codigo ON docentes(codigo);
