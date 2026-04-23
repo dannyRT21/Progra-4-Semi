@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AlumnoController;
+use App\Http\Controllers\UsuarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,4 +26,11 @@ Route::controller(AlumnoController::class)->group(function () {
     Route::post('/alumno', 'store');
     Route::put('/alumno', 'update');
     Route::delete('/alumno', 'destroy');
+});
+
+Route::controller(UsuarioController::class)->group(function () {
+    Route::get('/usuario', 'index');
+    Route::post('/usuario', 'store');
+    Route::put('/usuario', 'update');
+    Route::delete('/usuario', 'destroy');
 });

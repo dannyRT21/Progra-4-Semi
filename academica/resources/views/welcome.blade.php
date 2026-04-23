@@ -29,6 +29,7 @@
                     <div class="navbar-nav">
                         <a class="nav-link" href="#" @click="abrirVentana('alumnos')">Alumnos</a>
                         <a class="nav-link" href="#" @click="abrirVentana('materias')">Materias</a>
+                        <a class="nav-link" href="#" @click="abrirVentana('usuarios')">Usuarios</a>
 
                     </div>
                 </div>
@@ -37,6 +38,8 @@
         <div class="container-fluid" style="position: absolute; min-height: 80vh;">
             <alumnos @buscar='buscar("buscar_alumnos","obtenerAlumnos")' :forms="forms" ref="alumnos" v-show="forms.alumnos.mostrar"></alumnos>
             <buscar_alumnos @modificar='modificar("alumnos","modificarAlumno", $event)' :forms="forms" ref="buscar_alumnos" v-show="forms.buscar_alumnos.mostrar"></buscar_alumnos>
+            <usuarios @buscar='buscar("buscar_usuarios","obtenerUsuarios")' :forms="forms" ref="usuarios" v-show="forms.usuarios.mostrar"></usuarios>
+            <buscar_usuarios @modificar='modificar("usuarios","modificarUsuario", $event)' :forms="forms" ref="buscar_usuarios" v-show="forms.buscar_usuarios.mostrar"></buscar_usuarios>
 
         </div>
     </div>

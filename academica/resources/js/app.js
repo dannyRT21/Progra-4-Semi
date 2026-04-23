@@ -15,6 +15,8 @@ import { createApp } from 'vue';
 
 import AlumnoComponent from './components/AlumnoComponent.vue';
 import BusquedaAlumnoComponent from './components/BusquedaAlumnoComponent.vue';
+import UsuarioComponent from './components/UsuarioComponent.vue';
+import BusquedaUsuarioComponent from './components/BusquedaUsuarioComponent.vue';
 
 const app = createApp({
     data() {
@@ -22,6 +24,8 @@ const app = createApp({
             forms: {
                 alumnos: { mostrar: false },
                 buscar_alumnos: { mostrar: false },
+                usuarios: { mostrar: false },
+                buscar_usuarios: { mostrar: false },
                 materias: { mostrar: false },
                 docentes: { mostrar: false },
                 matriculas: { mostrar: false },
@@ -53,6 +57,8 @@ const app = createApp({
 
 app.component('alumnos', AlumnoComponent);
 app.component('buscar_alumnos', BusquedaAlumnoComponent);
+app.component('usuarios', UsuarioComponent);
+app.component('buscar_usuarios', BusquedaUsuarioComponent);
 
 /**
  * The following block of code may be used to automatically register your
