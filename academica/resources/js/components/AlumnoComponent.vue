@@ -1,11 +1,11 @@
 <template>
-    <div v-draggable>
+    <div v-draggable class="ventana-arrastrable">
         <form
             id="frmAlumnos"
             @submit.prevent="guardarAlumno"
             @reset.prevent="limpiarFormulario"
         >
-            <div class="card text-bg-dark">
+            <div class="card text-bg-dark border-secondary shadow-lg">
                 <div class="card-header">
                     <div class="d-flex justify-content-between">
                         <div class="p-1">REGISTRO DE ALUMNOS</div>
@@ -188,3 +188,32 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.ventana-arrastrable {
+    width: 95vw;
+    max-width: 450px;
+    top: 10vh;
+    left: calc(50% - 225px);
+    border-radius: 8px;
+    /* Transición suave para el hover del header */
+    transition: box-shadow 0.3s ease;
+}
+
+.ventana-arrastrable:hover {
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7);
+}
+
+.card {
+    border-radius: 8px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    background-color: rgba(33, 37, 41, 0.95) !important;
+}
+
+@media (max-width: 480px) {
+    .ventana-arrastrable {
+        left: 2.5vw;
+    }
+}
+</style>
