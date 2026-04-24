@@ -1,0 +1,10 @@
+Hola inge Luis… Espero llegue a funcionar esto 😉
+Describa en 5 renglones como máximo de que trata (idea de negocio) su proyecto:
+Es una app web de gestión de un sistema de agua comunitaria llamada “Hidrovida” 
+aca están las funcionalidades 
+de reporte de fallas y la de agregar usuarios ( que es un MVP de la función de login)
+
+Se que hay varios errores como a nivel de buenas prácticas y separacion de vistas a nivel de usuario y administrador
+pero es como una idea de las funcionalidades que se piensan implementar
+pero pues soy estudiante y aun que este rubro (de programar) me gusta un poco a 
+veces hacer las cosas por mi cuenta no me funciona del todo bien, espero las pueda probar 😊

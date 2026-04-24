@@ -24,11 +24,9 @@
     <div id="appSistema">
         <nav class="navbar navbar-expand-lg bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#">::.. SISTEMA ACADEMICO ..::</a>
+                <a class="navbar-brand" href="#">::.. HIDROVIDA (sistema de agua comunitaria)..::</a>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                     <div class="navbar-nav">
-                        <a class="nav-link" href="#" @click="abrirVentana('alumnos')">Alumnos</a>
-                        <a class="nav-link" href="#" @click="abrirVentana('materias')">Materias</a>
                         <a class="nav-link" href="#" @click="abrirVentana('usuarios')">Usuarios</a>
                         <a class="nav-link" href="#" @click="abrirVentana('reportefallas')">Reportes Fallas</a>
 

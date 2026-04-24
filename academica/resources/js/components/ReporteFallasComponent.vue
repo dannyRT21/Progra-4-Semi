@@ -13,7 +13,7 @@
             <!-- Vista: Validar DUI -->
             <div class="card-body" v-if="!usuarioValidado && !mostrarBuscador">
                 <div class="alert alert-info">
-                    Bienvenido al reporte de fallas del servicio de agua llamado Hidrovida. Para reportar una falla debes ser un usuario registrado en esta página o utilizar el servicio. (Esto se hace para fines de fiabilidad.)
+                    Bienvenidx al reporte de fallas del servicio de agua llamado Hidrovida. Para reportar una falla debes ser un usuario registrado en esta página o utilizar el servicio. (Esto se hace para fines de fiabilidad.)
                 </div>
                 <div class="row p-1 align-items-center">
                     <div class="col-12 mb-2">Ingresa tu número de DUI:</div>
@@ -49,8 +49,14 @@
                         <div class="col-4">Foto (Opcional):</div>
                         <div class="col-8">
                             <input type="file" ref="fotoInput" @change="manejarFoto" class="form-control" accept="image/*" />
-                            <div v-if="reporte.foto_path && accion === 'modificar'" class="mt-1">
-                                <a :href="reporte.foto_path" target="_blank" class="text-info">Ver foto actual</a>
+                            
+                            <!-- Preview de imagen local -->
+                            <div v-if="fotoPreviewUrl" class="mt-2 text-center p-1 bg-dark border rounded">
+                                <img :src="fotoPreviewUrl" alt="Vista previa" class="img-fluid rounded" style="max-height: 150px; object-fit: contain;">
+                            </div>
+                            <!-- Preview de imagen ya guardada (update) -->
+                            <div v-else-if="reporte.foto_path && accion === 'modificar'" class="mt-2 text-center p-1 bg-dark border rounded">
+                                <img :src="reporte.foto_path" alt="Vista previa actual" class="img-fluid rounded" style="max-height: 150px; object-fit: contain;">
                             </div>
                         </div>
                     </div>
@@ -58,7 +64,10 @@
                     <div class="row p-1 align-items-center">
                         <div class="col-4">Ubicación GPS:</div>
                         <div class="col-4">
-                            <button type="button" class="btn btn-secondary btn-sm w-100" @click="obtenerUbicacion">Obtener ubicación</button>
+                            <button type="button" class="btn btn-secondary btn-sm w-100" @click="obtenerUbicacion" :disabled="obteniendoUbicacion">
+                                <span v-if="obteniendoUbicacion" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span v-else>Obtener ubicación</span>
+                            </button>
                         </div>
                         <div class="col-4 text-center">
                             <a v-if="reporte.maps_url" :href="reporte.maps_url" target="_blank" class="text-info">Ver en Maps</a>
@@ -122,7 +131,9 @@
                                     <a v-if="rep.maps_url" :href="rep.maps_url" target="_blank" class="text-info">Link Maps</a>
                                 </td>
                                 <td>
-                                    <a v-if="rep.foto_path" :href="rep.foto_path" target="_blank" class="text-info">Ver</a>
+                                    <a v-if="rep.foto_path" :href="rep.foto_path" target="_blank">
+                                        <img :src="rep.foto_path" alt="Foto" class="img-thumbnail" style="max-height: 60px; max-width: 80px; object-fit: cover;">
+                                    </a>
                                 </td>
                                 <td>
                                     <button class="btn btn-sm btn-info me-1" @click="modificarReporte(rep)">EDIT</button>
@@ -162,6 +173,8 @@ export default {
                 fecha: hoy,
             },
             fotoFile: null,
+            fotoPreviewUrl: null,
+            obteniendoUbicacion: false,
             accion: "nuevo",
             reportes: [],
             buscar: "",
@@ -196,14 +209,17 @@ export default {
         },
         obtenerUbicacion() {
             if (navigator.geolocation) {
+                this.obteniendoUbicacion = true;
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         this.reporte.lat = position.coords.latitude;
                         this.reporte.lng = position.coords.longitude;
                         this.reporte.maps_url = `https://www.google.com/maps?q=${this.reporte.lat},${this.reporte.lng}`;
+                        this.obteniendoUbicacion = false;
                         alertify.success("Ubicación obtenida correctamente.");
                     },
                     (error) => {
+                        this.obteniendoUbicacion = false;
                         alertify.error("Error al obtener la ubicación. Permisos denegados.");
                     }
                 );
@@ -212,9 +228,23 @@ export default {
             }
         },
         manejarFoto(event) {
-            this.fotoFile = event.target.files[0];
+            const file = event.target.files[0];
+            this.fotoFile = file;
+            if (file) {
+                this.fotoPreviewUrl = URL.createObjectURL(file);
+            } else {
+                if (this.fotoPreviewUrl) URL.revokeObjectURL(this.fotoPreviewUrl);
+                this.fotoPreviewUrl = null;
+            }
         },
         confirmarEnvio() {
+            let imgPreviewHtml = "";
+            if (this.fotoPreviewUrl) {
+                imgPreviewHtml = `<img src="${this.fotoPreviewUrl}" style="max-height: 180px; max-width: 100%; object-fit: contain; margin-top: 10px; border-radius: 8px;" alt="Vista previa">`;
+            } else if (this.reporte.foto_path && this.accion === 'modificar') {
+                imgPreviewHtml = `<img src="${this.reporte.foto_path}" style="max-height: 180px; max-width: 100%; object-fit: contain; margin-top: 10px; border-radius: 8px;" alt="Vista previa actual">`;
+            }
+
             let htmlMsg = `
                 <div style="text-align: left;">
                     <p><strong>Vas a enviar el siguiente reporte:</strong></p>
@@ -225,6 +255,7 @@ export default {
                         <li><strong>Ubicación:</strong> ${this.reporte.direccion_texto || 'No especificada'} ${this.reporte.maps_url ? '(Coordenadas adjuntas)' : ''}</li>
                         <li><strong>Foto:</strong> ${this.fotoFile || (this.reporte.foto_path && this.accion === 'modificar') ? 'Adjunta' : 'Ninguna'}</li>
                     </ul>
+                    ${imgPreviewHtml ? `<div style="text-align: center;">${imgPreviewHtml}</div>` : ''}
                 </div>
             `;
             
@@ -289,6 +320,11 @@ export default {
                 fecha: hoy,
             };
             this.fotoFile = null;
+            if (this.fotoPreviewUrl) {
+                URL.revokeObjectURL(this.fotoPreviewUrl);
+            }
+            this.fotoPreviewUrl = null;
+            this.obteniendoUbicacion = false;
             if (this.$refs.fotoInput) this.$refs.fotoInput.value = "";
             this.accion = "nuevo";
         },
@@ -310,6 +346,12 @@ export default {
             this.usuarioValidado = true;
             this.mostrarBuscador = false;
             this.accion = "modificar";
+            
+            // Clear current file preview
+            this.fotoFile = null;
+            if (this.fotoPreviewUrl) URL.revokeObjectURL(this.fotoPreviewUrl);
+            this.fotoPreviewUrl = null;
+            if (this.$refs.fotoInput) this.$refs.fotoInput.value = "";
         },
         eliminarReporte(rep, event) {
             event.stopPropagation();
