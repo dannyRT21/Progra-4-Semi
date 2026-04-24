@@ -34,3 +34,12 @@ Route::controller(UsuarioController::class)->group(function () {
     Route::put('/usuario', 'update');
     Route::delete('/usuario', 'destroy');
 });
+Route::get('/usuario/por-dui', [UsuarioController::class, 'findByDui']);
+
+use App\Http\Controllers\ReporteFallaController;
+Route::controller(ReporteFallaController::class)->group(function () {
+    Route::get('/reporte-falla', 'index');
+    Route::post('/reporte-falla', 'store');
+    Route::put('/reporte-falla', 'update');
+    Route::delete('/reporte-falla', 'destroy');
+});

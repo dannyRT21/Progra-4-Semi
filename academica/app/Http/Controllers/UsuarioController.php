@@ -26,6 +26,15 @@ class UsuarioController extends Controller
         return $query->get();
     }
 
+    public function findByDui(Request $request)
+    {
+        $usuario = Usuario::where('dui', $request->dui)->first();
+        if ($usuario) {
+            return response()->json($usuario, 200);
+        }
+        return response()->json(['msg' => 'Usuario no encontrado'], 404);
+    }
+
     public function store(Request $request)
     {
         $data = $request->all();
