@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hola Mundo, usando socket.io</title>
+</head>
+
+<body>
+    <h1>Hola Mundo, usando socket.io</h1>
+    <div id="estado">Conectando...</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"
+        integrity="sha512-8BHxHDLsOHx+flIrQ0DrZcea7MkHqRU5GbTHmbdzMRnAaoCIkZ97PqZcXJkKZckMMhqfoeaJE+DNUVuyoQsO3Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        const socket = io.connect('http://localhost:3000', { 'forceNew': true, 'transports': ['websocket', 'polling'] });
+        socket.on('connect', () => {
+            document.getElementById('estado').innerText = 'Conectado';
+        });
+        socket.on('disconnect', () => {
+            document.getElementById('estado').innerText = 'Desconectado';
+        });
+    </script>
+</body>
+
+</html>
