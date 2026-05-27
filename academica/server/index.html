@@ -10,17 +10,111 @@
 <body>
     <h1>Hola Mundo, usando socket.io</h1>
     <div id="estado">Conectando...</div>
+
+    <!-- Cambiado para prevenir el recargo de página al presionar Enter o enviar el formulario -->
+    <form onsubmit="event.preventDefault(); enviarMensaje();">
+        <ul id="ulMensajes"></ul>
+        <input type="text" id="txtMensaje" placeholder="Escribe tu mensaje...">
+        <button type="submit">
+            Enviar mensaje
+        </button>
+    </form>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"
         integrity="sha512-8BHxHDLsOHx+flIrQ0DrZcea7MkHqRU5GbTHmbdzMRnAaoCIkZ97PqZcXJkKZckMMhqfoeaJE+DNUVuyoQsO3Q=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
+        window.permisoNotificaciones = false;
+
+        document.addEventListener('DOMContentLoaded', event => {
+            // Verificar si ya tenemos permiso previamente concedido
+            if (Notification.permission === 'granted') {
+                window.permisoNotificaciones = true;
+            }
+        });
+
+        function agregarMensaje(data) {
+            const ul = document.getElementById('ulMensajes'),
+                li = document.createElement('li');
+            li.innerText = data.titulo + ': ' + data.mensaje;
+            ul.appendChild(li);
+        }
+
+        async function solicitarPermisoNotificaciones() {
+            if (Notification.permission === 'granted') {
+                window.permisoNotificaciones = true;
+                console.log('Permiso ya concedido');
+            } else {
+                let permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    window.permisoNotificaciones = true;
+                    console.log('Permiso concedido: ', permission);
+                } else {
+                    window.permisoNotificaciones = false;
+                    console.log('Permiso denegado: ', permission);
+                }
+            }
+        }
+
+        async function enviarMensaje() {
+            // Solicitar permisos al enviar el primer mensaje (gesto del usuario)
+            if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                await solicitarPermisoNotificaciones();
+            }
+
+            const mensajeInput = document.getElementById('txtMensaje');
+            const mensaje = mensajeInput.value.trim();
+
+            // Validar que el mensaje no esté vacío para no enviar notificaciones en blanco
+            if (!mensaje) return;
+
+            let data = {
+                titulo: 'Butter N.',
+                mensaje: mensaje
+            };
+            socket.emit('mensajeRecibido', data);
+            mensajeInput.value = '';
+        }
+
+        // Se conecta automáticamente al servidor de Socket.IO
         const socket = io.connect('http://localhost:3000', { 'forceNew': true, 'transports': ['websocket', 'polling'] });
+
         socket.on('connect', () => {
             document.getElementById('estado').innerText = 'Conectado';
         });
+
         socket.on('disconnect', () => {
             document.getElementById('estado').innerText = 'Desconectado';
         });
+
+        socket.on('mensajeEnviar', (data) => {
+            crearNotificacionLocal(data.titulo, data.mensaje);
+            agregarMensaje(data);
+        });
+
+        // La función solicitarPermisoNotificaciones() se movió arriba para usarse en enviarMensaje()
+
+        function crearNotificacionLocal(titulo = '', mensaje = '') {
+            if (!window.permisoNotificaciones) {
+                console.log('Permiso de notificaciones denegado, o no concedido.');
+                return;
+            }
+
+            // Usamos tu logo de perfil de Github (dannyRT21) en la propiedad 'icon'
+            let notificacion = new Notification(titulo, {
+                body: mensaje,
+                icon: 'https://github.com/dannyRT21.png'
+            });
+
+            notificacion.onclick = () => {
+                window.open('https://github.com/dannyRT21/Progra-4-Semi.git', '_blank');
+                notificacion.close();
+            };
+
+            setTimeout(() => {
+                notificacion.close();
+            }, 5000);
+        }
     </script>
 </body>
 
