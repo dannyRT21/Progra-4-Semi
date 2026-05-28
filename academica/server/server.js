@@ -61,6 +61,18 @@ io.on('connect', (socket) => {
         
         io.emit('mensajeEnviar', data);
     });
+
+    socket.on('solicitarMensajes', async () => {
+        try {
+            let db = await conectarMongo(),
+                collection = db.collection('chats');
+            
+            let mensajes = await collection.find().sort({fecha: 1}).toArray();
+            socket.emit('mensajesRecuperados', mensajes);
+        } catch (error) {
+            console.error('Error recuperando mensajes de MongoDB:', error);
+        }
+    });
 });
 
 http.listen(3000, () => {

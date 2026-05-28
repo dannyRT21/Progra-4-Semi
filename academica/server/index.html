@@ -5,16 +5,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hola Mundo, usando socket.io</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        #ulMensajes {
+            list-style-type: none;
+            padding: 10px;
+            margin: 0 0 15px 0;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        #ulMensajes li {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .fecha-hora {
+            display: block;
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 4px;
+        }
+        .btn-recuperar {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .btn-recuperar:hover { background-color: #218838; }
+        .form-chat { display: flex; gap: 10px; }
+        .form-chat input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-chat button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .form-chat button:hover { background-color: #0056b3; }
+    </style>
 </head>
 
 <body>
     <h1>Hola Mundo, usando socket.io</h1>
     <div id="estado">Conectando...</div>
 
+    <button class="btn-recuperar" onclick="recuperarMensajes()">Recuperar mensajes</button>
+
+    <ul id="ulMensajes"></ul>
+
     <!-- Cambiado para prevenir el recargo de página al presionar Enter o enviar el formulario -->
-    <form onsubmit="event.preventDefault(); enviarMensaje();">
-        <ul id="ulMensajes"></ul>
-        <input type="text" id="txtMensaje" placeholder="Escribe tu mensaje...">
+    <form class="form-chat" onsubmit="event.preventDefault(); enviarMensaje();">
+        <input type="text" id="txtMensaje" placeholder="Escribe tu mensaje..." autocomplete="off">
         <button type="submit">
             Enviar mensaje
         </button>
@@ -36,8 +79,20 @@
         function agregarMensaje(data) {
             const ul = document.getElementById('ulMensajes'),
                 li = document.createElement('li');
-            li.innerText = data.titulo + ': ' + data.mensaje;
+            
+            // Usar la fecha provista o la actual si acaba de llegar
+            let fecha = data.fecha ? new Date(data.fecha) : new Date();
+            let fechaFormateada = fecha.toLocaleDateString() + ' ' + fecha.toLocaleTimeString();
+            
+            // Determinar el nombre del usuario, soportando la estructura de la base de datos
+            let nombreUsuario = data.user || data.titulo || 'Usuario';
+
+            li.innerHTML = `<strong>${nombreUsuario}</strong>: ${data.mensaje}
+                            <span class="fecha-hora">${fechaFormateada}</span>`;
             ul.appendChild(li);
+
+            // Hacer scroll automáticamente al final cuando hay muchos mensajes
+            ul.scrollTop = ul.scrollHeight;
         }
 
         async function solicitarPermisoNotificaciones() {
@@ -90,6 +145,17 @@
         socket.on('mensajeEnviar', (data) => {
             crearNotificacionLocal(data.titulo, data.mensaje);
             agregarMensaje(data);
+        });
+
+        // Funcionalidad para recuperar mensajes de MongoDB
+        function recuperarMensajes() {
+            socket.emit('solicitarMensajes');
+        }
+
+        socket.on('mensajesRecuperados', (mensajes) => {
+            const ul = document.getElementById('ulMensajes');
+            ul.innerHTML = ''; // Limpiamos la lista para no duplicar si se presiona varias veces
+            mensajes.forEach(msg => agregarMensaje(msg));
         });
 
         // La función solicitarPermisoNotificaciones() se movió arriba para usarse en enviarMensaje()
